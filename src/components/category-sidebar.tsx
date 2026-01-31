@@ -120,7 +120,7 @@ export default function CategorySidebar({
   };
 
   return (
-    <div className="flex h-screen w-[180px] flex-col border-r bg-background p-4">
+    <div className="flex h-screen w-40 flex-col border-r bg-background p-4">
       <button
         type="button"
         className="group relative mb-4 w-full shrink-0 overflow-hidden rounded border border-blue-400 bg-blue-900 px-6 py-3 font-mono tracking-wider text-blue-300 uppercase transition-all duration-300 hover:border-blue-300 disabled:pointer-events-none disabled:opacity-50"
