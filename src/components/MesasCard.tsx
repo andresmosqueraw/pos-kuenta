@@ -6,6 +6,7 @@ import { Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import * as React from 'react';
 import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
 
 type EstadoVisual = 'disponible' | 'ocupada';
 
@@ -14,9 +15,11 @@ const EMPTY_ARRAY: number[] = [];
 export function MesasCard({
   mesas,
   mesasConCarrito = EMPTY_ARRAY,
+  className,
 }: {
   mesas: Mesa[];
   mesasConCarrito?: number[];
+  className?: string;
 }) {
   const [filter, setFilter] = React.useState('');
 
@@ -151,7 +154,7 @@ export function MesasCard({
   };
 
   return (
-    <div className="space-y-4">
+    <div className={cn('space-y-4', className)}>
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold text-foreground">Mesas</h2>
         <div className="relative">

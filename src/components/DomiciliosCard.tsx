@@ -6,6 +6,7 @@ import { Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import * as React from 'react';
 import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
 
 type EstadoVisual = 'disponible' | 'con-pedido';
 
@@ -14,9 +15,11 @@ const EMPTY_ARRAY: number[] = [];
 export function DomiciliosCard({
   domicilios,
   domiciliosConCarrito = EMPTY_ARRAY,
+  className,
 }: {
   domicilios: DomicilioConRestaurantes[];
   domiciliosConCarrito?: number[];
+  className?: string;
 }) {
   const [filter, setFilter] = React.useState('');
   const router = useRouter();
@@ -76,7 +79,7 @@ export function DomiciliosCard({
   };
 
   return (
-    <div className="space-y-4">
+    <div className={cn('space-y-4', className)}>
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold text-foreground">
           Domicilios

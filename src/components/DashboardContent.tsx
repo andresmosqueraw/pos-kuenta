@@ -181,7 +181,7 @@ export function DashboardContent({
         </h1>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="flex flex-col gap-6">
         <MesasCard mesas={mesasFiltradas} mesasConCarrito={mesasConCarrito} />
         <DomiciliosCard domicilios={domiciliosMostrados} domiciliosConCarrito={domiciliosConCarritoFiltrados} />
       </div>
