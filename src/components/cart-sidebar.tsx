@@ -96,31 +96,31 @@ export default function CartSidebar() {
                             <Button
                               variant="outline"
                               size="icon"
-                              className="h-7 w-7"
+                              className="h-8 w-8"
                               onClick={() => updateQuantity(item.id, item.quantity - 1)}
                               disabled={isUpdating}
                             >
-                              <Minus className="h-3 w-3" />
+                              <Minus className="h-8 w-8" />
                             </Button>
-                            <span className="w-8 text-center">{item.quantity}</span>
+                            <span className="w-10 text-center text-lg font-semibold">{item.quantity}</span>
                             <Button
                               variant="outline"
                               size="icon"
-                              className="h-7 w-7"
+                              className="h-8 w-8"
                               onClick={() => updateQuantity(item.id, item.quantity + 1)}
                               disabled={isUpdating}
                             >
-                              <Plus className="h-3 w-3" />
+                              <Plus className="h-8 w-8" />
                             </Button>
                           </div>
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-7 w-7 text-muted-foreground"
+                            className="h-8 w-8 text-muted-foreground"
                             onClick={() => removeFromCart(item.id)}
                             disabled={isUpdating}
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Trash2 className="h-8 w-8" />
                           </Button>
                         </div>
                       </div>
