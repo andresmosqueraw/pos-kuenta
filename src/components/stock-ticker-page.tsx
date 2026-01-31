@@ -9,37 +9,32 @@ import { WatchlistTable } from './watchlist-table';
 
 export function StockTickerPage() {
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
-  const [stocks, setStocks] = useState<Stock[]>([]);
-
-  useEffect(() => {
-    setStocks(generateInitialStocks());
-  }, []);
+  const [stocks, setStocks] = useState<Stock[]>(() => generateInitialStocks());
 
   // Simulate live updates every 3-5 seconds
   useEffect(() => {
-    const interval = setInterval(
-      () => {
-        setStocks((prevStocks) => {
-          const updatedStocks = [...prevStocks];
-          const numToUpdate = Math.floor(Math.random() * 5) + 2;
-          const indicesToUpdate = new Set<number>();
+    const updateStocks = () => {
+      setStocks((prevStocks) => {
+        const updatedStocks = [...prevStocks];
+        const numToUpdate = Math.floor(Math.random() * 5) + 2;
+        const indicesToUpdate = new Set<number>();
 
-          while (indicesToUpdate.size < Math.min(numToUpdate, updatedStocks.length)) {
-            indicesToUpdate.add(Math.floor(Math.random() * updatedStocks.length));
+        while (indicesToUpdate.size < Math.min(numToUpdate, updatedStocks.length)) {
+          indicesToUpdate.add(Math.floor(Math.random() * updatedStocks.length));
+        }
+
+        indicesToUpdate.forEach((index) => {
+          const stock = updatedStocks[index];
+          if (stock) {
+            updatedStocks[index] = simulateStockUpdate(stock);
           }
-
-          indicesToUpdate.forEach((index) => {
-            const stock = updatedStocks[index];
-            if (stock) {
-              updatedStocks[index] = simulateStockUpdate(stock);
-            }
-          });
-
-          return updatedStocks;
         });
-      },
-      3000 + Math.random() * 2000,
-    );
+
+        return updatedStocks;
+      });
+    };
+
+    const interval = setInterval(updateStocks, 3000 + Math.random() * 2000);
 
     return () => clearInterval(interval);
   }, []);

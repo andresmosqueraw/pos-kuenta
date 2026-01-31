@@ -442,7 +442,7 @@ export async function agregarProductoACarrito(
     return { success: false, error: error.message };
   }
 
-  console.log(`✅ [agregarProductoACarrito] Función RPC optimizada usada exitosamente (${duration}ms)`);
+  console.warn(`✅ [agregarProductoACarrito] Función RPC optimizada usada exitosamente (${duration}ms)`);
   return { success: true };
 }
 
@@ -501,7 +501,7 @@ async function agregarProductoACarritoFallback(
   }
 
   const duration = Date.now() - startTime;
-  console.log(`⚠️ [agregarProductoACarrito] Método fallback usado (${duration}ms) - Considera ejecutar optimizaciones_carrito.sql en Supabase`);
+  console.warn(`⚠️ [agregarProductoACarrito] Método fallback usado (${duration}ms) - Considera ejecutar optimizaciones_carrito.sql en Supabase`);
   return { success: true };
 }
 

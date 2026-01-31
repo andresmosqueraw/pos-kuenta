@@ -103,7 +103,7 @@ export function DashboardHeader() {
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem>
-                  <BreadcrumbPage>
+                  <BreadcrumbPage className="text-base font-bold sm:text-lg">
                     Mesas y Domicilios
                     {selectedRestaurant && (
                       <span className="ml-2">

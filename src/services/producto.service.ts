@@ -128,7 +128,7 @@ export async function getProductosByRestaurante(
   const supabase = await createClient();
 
   // Paso 1: Obtener productos_restaurante disponibles
-  console.log(`🔍 [getProductosByRestaurante] Buscando productos para restaurante ${restauranteId}`);
+  console.warn(`🔍 [getProductosByRestaurante] Buscando productos para restaurante ${restauranteId}`);
   const { data: productosRestaurante, error: errorProductosRestaurante } = await supabase
     .from('producto_restaurante')
     .select(`
@@ -156,7 +156,7 @@ export async function getProductosByRestaurante(
     return [];
   }
 
-  console.log(`✅ [getProductosByRestaurante] Encontrados ${productosRestaurante.length} productos_restaurante`);
+  console.warn(`✅ [getProductosByRestaurante] Encontrados ${productosRestaurante.length} productos_restaurante`);
 
   // Paso 2: Obtener las categorías visibles para este restaurante
   const { data: categoriasRestaurante, error: errorCategoriasRestaurante } = await supabase
@@ -168,7 +168,7 @@ export async function getProductosByRestaurante(
   if (errorCategoriasRestaurante) {
     console.error('❌ [getProductosByRestaurante] Error fetching categorias_restaurante:', errorCategoriasRestaurante);
   } else {
-    console.log(`✅ [getProductosByRestaurante] Encontradas ${categoriasRestaurante?.length || 0} categorías visibles para el restaurante`);
+    console.warn(`✅ [getProductosByRestaurante] Encontradas ${categoriasRestaurante?.length || 0} categorías visibles para el restaurante`);
   }
 
   const categoriasVisiblesIds = new Set(
@@ -177,7 +177,7 @@ export async function getProductosByRestaurante(
 
   // Paso 3: Obtener las relaciones producto_categoria para todos los productos
   const productoIds = productosRestaurante.map(pr => pr.producto_id);
-  console.log(`🔍 [getProductosByRestaurante] Buscando categorías para ${productoIds.length} productos`);
+  console.warn(`🔍 [getProductosByRestaurante] Buscando categorías para ${productoIds.length} productos`);
   const { data: productoCategorias, error: errorProductoCategorias } = await supabase
     .from('producto_categoria')
     .select('producto_id, categoria_id, categoria:categoria_id (id, nombre)')
@@ -186,7 +186,7 @@ export async function getProductosByRestaurante(
   if (errorProductoCategorias) {
     console.error('❌ [getProductosByRestaurante] Error fetching producto_categoria:', errorProductoCategorias);
   } else {
-    console.log(`✅ [getProductosByRestaurante] Encontradas ${productoCategorias?.length || 0} relaciones producto_categoria`);
+    console.warn(`✅ [getProductosByRestaurante] Encontradas ${productoCategorias?.length || 0} relaciones producto_categoria`);
   }
 
   // Paso 4: Crear un mapa de producto_id -> categoría (solo categorías visibles para el restaurante)
@@ -233,10 +233,10 @@ export async function getProductosByRestaurante(
       };
     });
 
-  console.log(`✅ [getProductosByRestaurante] Cargados ${productos.length} productos para restaurante ${restauranteId}`);
+  console.warn(`✅ [getProductosByRestaurante] Cargados ${productos.length} productos para restaurante ${restauranteId}`);
   const primerProducto = productos[0];
   if (primerProducto) {
-    console.log(`📦 [getProductosByRestaurante] Primer producto:`, {
+    console.warn(`📦 [getProductosByRestaurante] Primer producto:`, {
       id: primerProducto.id,
       name: primerProducto.name,
       price: primerProducto.price,
@@ -329,7 +329,7 @@ export async function getCategoriasByRestaurante(
 ): Promise<Categoria[]> {
   const supabase = await createClient();
 
-  console.log(`🔍 [getCategoriasByRestaurante] Buscando categorías para restaurante ${restauranteId}`);
+  console.warn(`🔍 [getCategoriasByRestaurante] Buscando categorías para restaurante ${restauranteId}`);
 
   const { data, error } = await supabase
     .from('categoria_restaurante')
@@ -371,7 +371,7 @@ export async function getCategoriasByRestaurante(
     })
     .filter((cat): cat is Categoria => cat !== null);
 
-  console.log(`✅ [getCategoriasByRestaurante] Encontradas ${categorias.length} categorías visibles para el restaurante`);
+  console.warn(`✅ [getCategoriasByRestaurante] Encontradas ${categorias.length} categorías visibles para el restaurante`);
 
   return categorias;
 }

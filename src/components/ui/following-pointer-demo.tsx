@@ -1,5 +1,37 @@
 import { FollowerPointerCard } from './following-pointer';
 
+const blogContent = {
+  slug: 'amazing-tailwindcss-grid-layouts',
+  author: 'Manu Arora',
+  date: '28th March, 2023',
+  title: 'Amazing Tailwindcss Grid Layout Examples',
+  description:
+    'Grids are cool, but Tailwindcss grids are cooler. In this article, we will learn how to create amazing Grid layouts with Tailwindcs grid and React.',
+  image: '/modern-grid-layout.png',
+  authorAvatar: '/professional-avatar.png',
+};
+
+type TitleComponentProps = {
+  title: string;
+  avatar: string;
+};
+
+const TitleComponent = ({
+  title,
+  avatar,
+}: TitleComponentProps) => (
+  <div className="flex items-center space-x-2">
+    <img
+      src={avatar || '/placeholder.svg'}
+      height="20"
+      width="20"
+      alt="thumbnail"
+      className="rounded-full border-2 border-white"
+    />
+    <p>{title}</p>
+  </div>
+);
+
 export default function FollowingPointerDemo() {
   return (
     <div className="mx-auto w-80">
@@ -27,33 +59,3 @@ export default function FollowingPointerDemo() {
     </div>
   );
 }
-
-const blogContent = {
-  slug: 'amazing-tailwindcss-grid-layouts',
-  author: 'Manu Arora',
-  date: '28th March, 2023',
-  title: 'Amazing Tailwindcss Grid Layout Examples',
-  description:
-    'Grids are cool, but Tailwindcss grids are cooler. In this article, we will learn how to create amazing Grid layouts with Tailwindcs grid and React.',
-  image: '/modern-grid-layout.png',
-  authorAvatar: '/professional-avatar.png',
-};
-
-const TitleComponent = ({
-  title,
-  avatar,
-}: {
-  title: string;
-  avatar: string;
-}) => (
-  <div className="flex items-center space-x-2">
-    <img
-      src={avatar || '/placeholder.svg'}
-      height="20"
-      width="20"
-      alt="thumbnail"
-      className="rounded-full border-2 border-white"
-    />
-    <p>{title}</p>
-  </div>
-);

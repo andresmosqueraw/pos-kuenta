@@ -84,7 +84,7 @@ export async function getDomiciliosConRelaciones(restauranteId?: number): Promis
     return [];
   }
 
-  console.log(`✅ [getDomiciliosConRelaciones] RPC retornó ${clientesData.length} clientes para restaurante ${restauranteId}`);
+  console.warn(`✅ [getDomiciliosConRelaciones] RPC retornó ${clientesData.length} clientes para restaurante ${restauranteId}`);
 
   // Obtener IDs de todos los domicilios para consultar campos faltantes (referencia, creado_en)
   const domicilioIds: number[] = [];
@@ -170,7 +170,7 @@ export async function getDomiciliosConRelaciones(restauranteId?: number): Promis
 
     // Contar clientes activos vs potenciales
     if (totalCompras > 0) {
-      console.log(`📈 [getDomiciliosConRelaciones] Cliente ${clienteId} (${clienteNombre}): ACTIVO con ${totalCompras} compras`);
+      console.warn(`📈 [getDomiciliosConRelaciones] Cliente ${clienteId} (${clienteNombre}): ACTIVO con ${totalCompras} compras`);
     }
 
     // Para cada domicilio del cliente, crear un objeto DomicilioConRestaurantes
@@ -197,7 +197,7 @@ export async function getDomiciliosConRelaciones(restauranteId?: number): Promis
     });
   });
 
-  console.log(`✅ [getDomiciliosConRelaciones] Retornando ${domiciliosConRestaurantes.length} domicilios (ya ordenados por RPC: activos primero)`);
+  console.warn(`✅ [getDomiciliosConRelaciones] Retornando ${domiciliosConRestaurantes.length} domicilios (ya ordenados por RPC: activos primero)`);
 
   // Los datos ya vienen ordenados de la RPC (total_compras DESC, ultima_interaccion DESC)
   return domiciliosConRestaurantes;

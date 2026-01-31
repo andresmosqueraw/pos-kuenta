@@ -120,7 +120,7 @@ export function CartProvider({ children, tipo, id, restauranteId }: CartProvider
 
         if (!response.ok) {
           console.error('Error al crear carrito:', response.statusText);
-          alert('Error al agregar el producto. Por favor, intenta de nuevo.');
+          console.error('Error al agregar el producto. Por favor, intenta de nuevo.');
           return;
         }
 
@@ -146,7 +146,7 @@ export function CartProvider({ children, tipo, id, restauranteId }: CartProvider
 
         if (!response.ok) {
           console.error('Error al agregar producto:', response.statusText);
-          alert('Error al agregar el producto. Por favor, intenta de nuevo.');
+          console.error('Error al agregar el producto. Por favor, intenta de nuevo.');
           return;
         }
 
@@ -155,7 +155,7 @@ export function CartProvider({ children, tipo, id, restauranteId }: CartProvider
       }
     } catch (error) {
       console.error('Error al agregar al carrito:', error);
-      alert('Error al agregar el producto. Por favor, intenta de nuevo.');
+      console.error('Error al agregar el producto. Por favor, intenta de nuevo.');
     } finally {
       // Quitar el loading
       setUpdatingItems((prev) => {
@@ -188,7 +188,7 @@ export function CartProvider({ children, tipo, id, restauranteId }: CartProvider
 
       if (!response.ok) {
         console.error('Error al eliminar producto:', response.statusText);
-        alert('Error al eliminar el producto. Por favor, intenta de nuevo.');
+        console.error('Error al eliminar el producto. Por favor, intenta de nuevo.');
         return;
       }
 
@@ -196,7 +196,7 @@ export function CartProvider({ children, tipo, id, restauranteId }: CartProvider
       await cargarCarrito();
     } catch (error) {
       console.error('Error al eliminar del carrito:', error);
-      alert('Error al eliminar el producto. Por favor, intenta de nuevo.');
+      console.error('Error al eliminar el producto. Por favor, intenta de nuevo.');
     } finally {
       // Quitar el loading
       setUpdatingItems((prev) => {
@@ -245,7 +245,7 @@ export function CartProvider({ children, tipo, id, restauranteId }: CartProvider
 
       if (!response.ok) {
         console.error('Error al actualizar cantidad:', response.statusText);
-        alert('Error al actualizar la cantidad. Por favor, intenta de nuevo.');
+        console.error('Error al actualizar la cantidad. Por favor, intenta de nuevo.');
         return;
       }
 
@@ -253,7 +253,7 @@ export function CartProvider({ children, tipo, id, restauranteId }: CartProvider
       await cargarCarrito();
     } catch (error) {
       console.error('Error al actualizar cantidad:', error);
-      alert('Error al actualizar la cantidad. Por favor, intenta de nuevo.');
+      console.error('Error al actualizar la cantidad. Por favor, intenta de nuevo.');
     } finally {
       // Quitar el loading
       setUpdatingItems((prev) => {

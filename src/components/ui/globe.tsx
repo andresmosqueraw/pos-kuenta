@@ -17,6 +17,11 @@ type EarthProps = {
   markerColor?: [number, number, number];
   glowColor?: [number, number, number];
 };
+
+const DEFAULT_BASE_COLOR: [number, number, number] = [0.4, 0.6509, 1];
+const DEFAULT_MARKER_COLOR: [number, number, number] = [1, 0, 0];
+const DEFAULT_GLOW_COLOR: [number, number, number] = [0.2745, 0.5765, 0.898];
+
 const Earth: React.FC<EarthProps> = ({
   className,
   theta = 0.25,
@@ -25,9 +30,9 @@ const Earth: React.FC<EarthProps> = ({
   diffuse = 1.2,
   mapSamples = 40000,
   mapBrightness = 6,
-  baseColor = [0.4, 0.6509, 1],
-  markerColor = [1, 0, 0],
-  glowColor = [0.2745, 0.5765, 0.898],
+  baseColor = DEFAULT_BASE_COLOR,
+  markerColor = DEFAULT_MARKER_COLOR,
+  glowColor = DEFAULT_GLOW_COLOR,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -67,9 +72,10 @@ const Earth: React.FC<EarthProps> = ({
     });
 
     return () => {
+      window.removeEventListener('resize', onResize);
       globe.destroy();
     };
-  }, [dark]);
+  }, [dark, theta, scale, diffuse, mapSamples, mapBrightness, baseColor, markerColor, glowColor]);
 
   return (
     <div className={cn('z-[10] mx-auto flex w-full max-w-[350px] items-center justify-center', className)}>

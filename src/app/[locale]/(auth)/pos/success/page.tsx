@@ -2,7 +2,7 @@
 
 import { Check, Printer } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -14,8 +14,8 @@ export default function SuccessPage() {
   const { cart, cartTotal, clearCart } = useCart();
 
   const total = cartTotal;
-  const receiptNumber = Math.floor(100000 + Math.random() * 900000);
-  const date = new Date().toLocaleString('es-ES');
+  const [receiptNumber] = useState(() => Math.floor(100000 + Math.random() * 900000));
+  const [date] = useState(() => new Date().toLocaleString('es-ES'));
 
   useEffect(() => {
     // If there's no cart data, redirect to dashboard
@@ -104,7 +104,7 @@ export default function SuccessPage() {
             Imprimir Recibo
           </Button>
           <Button onClick={handleBackToDashboard} className="w-full">
-            Volver al Dashboard
+            Volver a las mesas
           </Button>
         </div>
       </div>

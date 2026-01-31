@@ -31,7 +31,15 @@ export function CardHoverEffect({
         glowEffect && 'hover:shadow-rose-500/25',
       )}
     >
-      {showGridLines && <div className="bg-grid-small-black/[0.2] dark:bg-grid-small-white/[0.2] absolute inset-0" />}
+      {showGridLines && (
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: 'radial-gradient(circle, rgba(0,0,0,0.2) 1px, transparent 1px)',
+            backgroundSize: '20px 20px',
+          }}
+        />
+      )}
       <div className="relative z-10">
         <div className="mb-4 h-8 w-8 text-rose-600">{icon}</div>
         <h3 className="mb-2 text-lg font-semibold">{title}</h3>

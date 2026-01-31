@@ -80,12 +80,26 @@ export function DomiciliosCard({
 
   return (
     <div className={cn('space-y-4', className)}>
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-foreground">
-          Domicilios
-          {' '}
-          (Direcciones de Clientes)
-        </h2>
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <h2 className="text-lg font-semibold text-foreground">
+            Domicilios
+            {' '}
+            (Direcciones de Clientes)
+          </h2>
+          <div className="flex flex-wrap gap-2">
+            <span className="rounded-full border border-emerald-500/30 bg-emerald-500/15 px-3 py-1 text-sm font-medium text-emerald-500 dark:bg-emerald-950/40">
+              {domiciliosDisponibles.length}
+              {' '}
+              Disponibles
+            </span>
+            <span className="rounded-full border border-red-500/30 bg-red-500/15 px-3 py-1 text-sm font-medium text-red-500 dark:bg-red-950/40">
+              {domiciliosConPedido.length}
+              {' '}
+              Con pedido
+            </span>
+          </div>
+        </div>
         <div className="relative">
           <Search className="absolute top-1/2 left-2.5 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -95,19 +109,6 @@ export function DomiciliosCard({
             className="h-8 w-40 pl-8 text-sm"
           />
         </div>
-      </div>
-
-      <div className="flex flex-wrap gap-2">
-        <span className="rounded-full border border-emerald-500/30 bg-emerald-500/15 px-3 py-1 text-sm font-medium text-emerald-500 dark:bg-emerald-950/40">
-          {domiciliosDisponibles.length}
-          {' '}
-          Disponibles
-        </span>
-        <span className="rounded-full border border-red-500/30 bg-red-500/15 px-3 py-1 text-sm font-medium text-red-500 dark:bg-red-950/40">
-          {domiciliosConPedido.length}
-          {' '}
-          Con pedido
-        </span>
       </div>
 
       <div className="overflow-hidden rounded-lg border border-border bg-card">

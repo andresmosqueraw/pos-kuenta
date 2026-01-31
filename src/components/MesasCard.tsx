@@ -6,6 +6,7 @@ import { Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import * as React from 'react';
 import { Input } from '@/components/ui/input';
+import { useRestaurant } from '@/contexts/RestaurantContext';
 import { cn } from '@/lib/utils';
 
 type EstadoVisual = 'disponible' | 'ocupada';
@@ -21,6 +22,7 @@ export function MesasCard({
   mesasConCarrito?: number[];
   className?: string;
 }) {
+  const { selectedRestaurant } = useRestaurant();
   const [filter, setFilter] = React.useState('');
 
   // Log para debugging
@@ -155,8 +157,31 @@ export function MesasCard({
 
   return (
     <div className={cn('space-y-4', className)}>
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-foreground">Mesas</h2>
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <h2 className="text-lg font-semibold text-foreground">
+            Mesas
+            {selectedRestaurant && (
+              <span className="ml-2">
+                -
+                {' '}
+                {selectedRestaurant.nombre}
+              </span>
+            )}
+          </h2>
+          <div className="flex flex-wrap gap-2">
+            <span className="rounded-full border border-emerald-500/30 bg-emerald-500/15 px-3 py-1 text-sm font-medium text-emerald-500 dark:bg-emerald-950/40">
+              {mesasDisponibles.length}
+              {' '}
+              Disponibles
+            </span>
+            <span className="rounded-full border border-red-500/30 bg-red-500/15 px-3 py-1 text-sm font-medium text-red-500 dark:bg-red-950/40">
+              {mesasOcupadas.length}
+              {' '}
+              Ocupadas
+            </span>
+          </div>
+        </div>
         <div className="relative">
           <Search className="absolute top-1/2 left-2.5 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -166,19 +191,6 @@ export function MesasCard({
             className="h-8 w-40 pl-8 text-sm"
           />
         </div>
-      </div>
-
-      <div className="flex flex-wrap gap-2">
-        <span className="rounded-full border border-emerald-500/30 bg-emerald-500/15 px-3 py-1 text-sm font-medium text-emerald-500 dark:bg-emerald-950/40">
-          {mesasDisponibles.length}
-          {' '}
-          Disponibles
-        </span>
-        <span className="rounded-full border border-red-500/30 bg-red-500/15 px-3 py-1 text-sm font-medium text-red-500 dark:bg-red-950/40">
-          {mesasOcupadas.length}
-          {' '}
-          Ocupadas
-        </span>
       </div>
 
       {mesasFiltradas.length === 0

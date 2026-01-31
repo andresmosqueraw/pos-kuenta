@@ -120,7 +120,7 @@ export default function CategorySidebar({
   };
 
   return (
-    <div className="flex h-screen w-56 flex-col border-r bg-background p-4">
+    <div className="flex h-screen w-[180px] flex-col border-r bg-background p-4">
       <button
         type="button"
         className="group relative mb-4 w-full shrink-0 overflow-hidden rounded border border-blue-400 bg-blue-900 px-6 py-3 font-mono tracking-wider text-blue-300 uppercase transition-all duration-300 hover:border-blue-300 disabled:pointer-events-none disabled:opacity-50"
@@ -134,7 +134,7 @@ export default function CategorySidebar({
           : (
               <ArrowLeft className="mr-2 inline-block h-5 w-5" />
             )}
-        {isNavigating ? 'Cargando...' : 'Guardar sin pagar'}
+        {isNavigating ? 'Cargando...' : 'Guardar y volver a mesas'}
         <div className="absolute inset-0 rounded border-2 border-blue-400 opacity-0 transition-opacity duration-300 group-hover:animate-pulse group-hover:opacity-100" />
         <div className="absolute top-1/2 left-1/2 h-0 w-0 -translate-x-10 -translate-y-10 rounded-full border-2 border-blue-400 transition-all duration-500 group-hover:h-20 group-hover:w-20" />
       </button>

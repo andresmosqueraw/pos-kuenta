@@ -168,7 +168,7 @@ export function DashboardContent({
         </div>
       )}
 
-      <div className="flex items-center justify-between">
+      <div className="flex hidden items-center justify-between">
         <h1 className="text-2xl font-bold">
           Mesas y Domicilios
           {selectedRestaurant && (
