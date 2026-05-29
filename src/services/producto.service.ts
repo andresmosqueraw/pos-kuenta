@@ -2,94 +2,128 @@ import type { Product } from '@/app/[locale]/(auth)/pos/context/cart-context';
 import type { Categoria } from '@/types/database';
 import { createClient } from '@/libs/supabase/server';
 
-// Imágenes disponibles para asignar según heurísticas
-const IMAGENES_DISPONIBLES = {
-  // Platos principales (orden específico primero)
-  'plato ejecutivo': '/plato-ejecutivo.png',
-  'plato casero': '/plato-casero.png',
-  'ejecutivo': '/plato-ejecutivo.png',
-  'casero': '/plato-casero.png',
-  'plato': '/plato-casero.png',
-  // Sopas
-  'sopa': '/sopa.png',
-  'caldo': '/caldo.png',
-  // Bebidas
-  'jugo': '/glass-of-orange-juice.png',
-  'agua': '/bottled-water.png',
-  'cola': '/refreshing-cola.png',
-  'limonada': '/iced-tea.png',
-  // Café y bebidas calientes
-  'cafe': '/latte-coffee.png',
-  'chocolate': '/chocolate-cake-slice.png',
-  'tinto': '/latte-coffee.png',
-  'aromatica': '/iced-tea.png',
-  // Desayunos
-  'desayuno': '/desayuno.png',
-  'huevo': '/huevos.png',
-  'huevos': '/huevos.png',
-  'pan': '/apple-pie-slice.png',
-  // Proteínas y especiales
-  'especial': '/plato-especial.png',
-  'sobrebarriga': '/plato-especial.png',
-  'mojarra': '/plato-especial.png',
-  'lomo': '/plato-especial.png',
-  'churrasco': '/plato-especial.png',
-  'costillas': '/plato-especial.png',
-  'churrasquito': '/plato-especial.png',
-  'pechuga': '/plato-especial.png',
-  // Acompañamientos
-  'proteina': '/crispy-chicken-wings.png',
-  'papa': '/crispy-french-fries.png',
-  'patacon': '/crispy-french-fries.png',
-  'arroz': '/arroz.png',
-  // Postres y dulces
-  'fruta': '/fruta.png',
-  'banano': '/fruta.png',
-  'torta': '/chocolate-cake-slice.png',
-  'gelatina': '/ice-cream-sundae.png',
-  'leche': '/cheesecake-slice.png',
-  // Otros
-  'icopor': '/bottled-water.png',
-  'calentada': '/delicious-pizza.png',
-  'moñona': '/delicious-pizza.png',
-  'rancheros': '/huevos.png',
-  'cacerola': '/huevos.png',
+// Helpers
+function norm(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036F]/g, '')
+    .trim();
+}
+
+// Imágenes disponibles para asignar según heurísticas (CLAVES NORMALIZADAS)
+const IMAGENES_DISPONIBLES: Record<string, string> = {
+  // 🥘 Platos caseros y ejecutivos (prioridad alta)
+  'plato ejecutivo sin sopa para llevar': '/products/plato-ejecutivo-sin-sopa-para-llevar.png',
+  'plato ejecutivo para llevar': '/products/plato-ejecutivo-sin-sopa-para-llevar.png',
+  'plato ejecutivo sin sopa': '/products/plato-ejecutivo-sin-sopa.png',
+  'plato ejecutivo': '/products/plato-ejecutivo.png',
+
+  'plato casero sin sopa para llevar': '/products/plato-casero-sin-sopa-para-llevar.png',
+  'plato casero para llevar': '/products/plato-casero-sin-sopa-para-llevar.png',
+  'plato casero sin sopa': '/products/plato-casero-sin-sopa.png',
+  'plato casero': '/products/plato-casero.png',
+
+  // 🥩 Especiales (y para llevar)
+  'costillas de cerdo especial para llevar': '/products/plato-especial.png',
+  'churrasco especial para llevar': '/products/plato-especial.png',
+  'sobrebarriga especial para llevar': '/products/plato-especial.png',
+  'mojarra especial para llevar': '/products/plato-especial.png',
+  'trucha especial para llevar': '/products/plato-especial.png',
+  'pechuga gratinada para llevar': '/products/plato-especial.png',
+  'lomo especial para llevar': '/products/plato-especial.png',
+  'churrasquito para llevar': '/products/plato-especial.png',
+
+  'costillas de cerdo especial': '/products/plato-especial.png',
+  'churrasco especial': '/products/plato-especial.png',
+  'sobrebarriga especial': '/products/plato-especial.png',
+  'mojarra especial': '/products/plato-especial.png',
+  'trucha especial': '/products/plato-especial.png',
+  'pechuga gratinada': '/products/plato-especial.png',
+  'lomo especial': '/products/plato-especial.png',
+  'churrasquito': '/products/plato-especial.png',
+
+  // 🍳 Desayunos y huevos
+  'desayuno completo llevar': '/products-old/desayuno.png',
+  'desayuno completo': '/products-old/desayuno.png',
+  'huevos rancheros': '/products-old/huevos.png',
+  'huevos con arroz': '/products-old/huevos.png',
+  'cacerola de huevos': '/products-old/huevos.png',
+  'huevo': '/products-old/huevos.png',
+
+  // 🍲 Sopas y caldos
+  'sopa grande de llevar': '/products-old/sopa.png',
+  'sopa pequena de llevar': '/products-old/sopa.png',
+  'sopa grande': '/products-old/sopa.png',
+  'sopa pequena': '/products-old/sopa.png',
+  'caldo para llevar': '/products-old/caldo.png',
+  'caldo': '/products-old/caldo.png',
+
+  // 🍗 Porciones y acompañamientos
+  'porcion de papa a la francesa': '/products-old/crispy-french-fries.png',
+  'porcion de patacon': '/products-old/crispy-french-fries.png',
+  'porcion yuca': '/products-old/crispy-french-fries.png',
+  'porcion de proteina': '/products-old/crispy-chicken-wings.png',
+  'porcion de arroz': '/products-old/arroz.png',
+  'porcion de torta': '/products-old/chocolate-cake-slice.png',
+  'pan': '/products-old/apple-pie-slice.png',
+
+  // 🍕 Otros
+  'calentada microondas': '/products-old/delicious-pizza.png',
+  'monona para llevar': '/products-old/delicious-pizza.png',
+  'monona': '/products-old/delicious-pizza.png',
+
+  // 🍉 Frutas y postres
+  'carnaval de gelatina': '/products-old/ice-cream-sundae.png',
+  'arroz con leche': '/products-old/cheesecake-slice.png',
+  'fruta para llevar': '/products/fruta.png',
+  'banano': '/products/fruta.png',
+  'fruta': '/products/fruta.png',
+
+  // 🥤 Bebidas
+  'jugo naranja': '/products-old/glass-of-orange-juice.png',
+  'jugo adicional': '/products-old/glass-of-orange-juice.png',
+  'limonada natural': '/products-old/iced-tea.png',
+  'coca cola': '/products-old/refreshing-cola.png',
+  'botella de agua': '/products-old/bottled-water.png',
+  'cafe con leche': '/products-old/latte-coffee.png',
+  'tinto': '/products-old/latte-coffee.png',
+  'aromatica': '/products-old/iced-tea.png',
+  'chocolate': '/products-old/chocolate-cake-slice.png',
+
+  // 📦 Empaques
+  'icopor pequeno': '/products-old/bottled-water.png',
+  'icopor grande': '/products-old/bottled-water.png',
+
   // Por defecto
-  'default': '/plato-casero.png',
+  'default': '/products/plato-casero-sin-sopa.png',
 };
 
 /**
- * Asigna una imagen basada en heurísticas del nombre del producto
+ * Asigna una imagen basada en coincidencia parcial (match más específico primero)
  */
 export function asignarImagenAProducto(nombreProducto: string, _productoId: number): string {
-  const nombreLower = nombreProducto.toLowerCase().normalize('NFD').replace(/[\u0300-\u036F]/g, ''); // Normalizar y quitar acentos
+  const n = norm(nombreProducto);
 
-  // Buscar palabras clave en el nombre del producto
-  const palabrasClave = Object.keys(IMAGENES_DISPONIBLES).filter(key => key !== 'default');
+  const keys = Object.keys(IMAGENES_DISPONIBLES).filter(k => k !== 'default');
 
-  // Buscar coincidencias (ordenadas por especificidad: frases completas primero, luego palabras más largas)
-  const palabrasOrdenadas = palabrasClave.sort((a, b) => {
-    // Priorizar frases de múltiples palabras
-    const aIsPhrase = a.includes(' ');
-    const bIsPhrase = b.includes(' ');
-    if (aIsPhrase && !bIsPhrase) {
-      return -1;
-    }
-    if (!aIsPhrase && bIsPhrase) {
-      return 1;
-    }
-    // Si ambos son frases o palabras, ordenar por longitud
-    return b.length - a.length;
+  // ordenar por "más específico primero": más palabras y más longitud
+  keys.sort((a, b) => {
+    const wa = a.split(' ').length;
+    const wb = b.split(' ').length;
+    if (wa !== wb) {
+      return wb - wa;
+    } // más palabras primero
+    return b.length - a.length; // luego más largo
   });
 
-  for (const palabra of palabrasOrdenadas) {
-    if (nombreLower.includes(palabra)) {
-      return IMAGENES_DISPONIBLES[palabra as keyof typeof IMAGENES_DISPONIBLES] || IMAGENES_DISPONIBLES.default;
+  for (const k of keys) {
+    if (n.includes(k)) {
+      return IMAGENES_DISPONIBLES[k] || IMAGENES_DISPONIBLES.default as string;
     }
   }
 
-  // Si no hay coincidencia, usar imagen por defecto
-  return IMAGENES_DISPONIBLES.default;
+  return IMAGENES_DISPONIBLES.default || '' as string;
 }
 
 /**
