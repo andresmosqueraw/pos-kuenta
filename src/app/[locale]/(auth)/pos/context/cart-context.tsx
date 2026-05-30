@@ -107,6 +107,7 @@ export function CartProvider({ children, tipo, id, restauranteId }: CartProvider
               restauranteId: Number.parseInt(restauranteId),
               productos: [{
                 productoId: product.id,
+                productoRestauranteId: product.productoRestauranteId,
                 cantidad: 1,
                 precioUnitario: product.price,
                 subtotal: product.price,
