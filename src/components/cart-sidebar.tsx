@@ -1,7 +1,7 @@
 'use client';
 
 import { Loader2, Minus, Plus, ShoppingCart, Trash2 } from 'lucide-react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
 import { useCart } from '../app/[locale]/(auth)/pos/context/cart-context';
@@ -9,17 +9,16 @@ import { useCart } from '../app/[locale]/(auth)/pos/context/cart-context';
 export default function CartSidebar() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const params = useParams<{ locale: string }>();
   const { cart, removeFromCart, updateQuantity, cartTotal, itemCount, updatingItems } = useCart();
 
   const handleCheckout = () => {
-    // Obtener parámetros de la URL actual (tipo de pedido)
     const tipo = searchParams.get('tipo');
     const id = searchParams.get('id');
     const numero = searchParams.get('numero');
     const clienteId = searchParams.get('clienteId');
     const restauranteId = searchParams.get('restauranteId');
 
-    // Construir URL del checkout con los parámetros
     const checkoutParams = new URLSearchParams();
     if (tipo) {
       checkoutParams.set('tipo', tipo);
@@ -37,7 +36,8 @@ export default function CartSidebar() {
       checkoutParams.set('restauranteId', restauranteId);
     }
 
-    router.push(`/pos/checkout?${checkoutParams.toString()}`);
+    const locale = params.locale ?? 'es';
+    router.push(`/${locale}/pos/checkout?${checkoutParams.toString()}`);
   };
 
   return (

@@ -1,7 +1,7 @@
 'use client';
 
 import { Check, Printer } from 'lucide-react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -19,6 +19,7 @@ type Restaurante = {
 export default function SuccessPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const routeParams = useParams<{ locale: string }>();
   const { cart, cartTotal, clearCart } = useCart();
 
   const total = cartTotal;
@@ -57,18 +58,20 @@ export default function SuccessPage() {
 
   useEffect(() => {
     if (cart.length === 0) {
+      const locale = routeParams.locale ?? 'es';
       const dashboardUrl = restauranteId
-        ? `/dashboard?restauranteId=${restauranteId}`
-        : '/dashboard';
+        ? `/${locale}/dashboard?restauranteId=${restauranteId}`
+        : `/${locale}/dashboard`;
       router.push(dashboardUrl);
     }
-  }, [cart, router, restauranteId]);
+  }, [cart, router, restauranteId, routeParams.locale]);
 
   const handleBackToDashboard = () => {
+    const locale = routeParams.locale ?? 'es';
     clearCart();
     const dashboardUrl = restauranteId
-      ? `/dashboard?restauranteId=${restauranteId}`
-      : '/dashboard';
+      ? `/${locale}/dashboard?restauranteId=${restauranteId}`
+      : `/${locale}/dashboard`;
     router.push(dashboardUrl);
   };
 

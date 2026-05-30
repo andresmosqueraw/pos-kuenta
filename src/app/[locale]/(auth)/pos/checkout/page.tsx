@@ -1,7 +1,7 @@
 'use client';
 
 import { ArrowLeft, CreditCard, MapPin, Table, Wallet } from 'lucide-react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -14,10 +14,12 @@ import { useCart } from '../context/cart-context';
 export default function CheckoutPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { cart, cartTotal, carritoId } = useCart();
+  const params = useParams<{ locale: string }>();
+  const { cart, cartTotal, carritoId, isLoading } = useCart();
   const [paymentMethod, setPaymentMethod] = useState('card');
   const [cashReceived, setCashReceived] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
 
   // Obtener información del tipo de pedido
   const tipo = searchParams.get('tipo');
@@ -36,25 +38,25 @@ export default function CheckoutPage() {
     : 0;
 
   const handlePayment = async () => {
+    setPaymentError(null);
+
     if (!carritoId || !restauranteId) {
-      console.error('Error: Faltan datos necesarios para procesar el pago');
+      setPaymentError('Error interno: faltan datos del carrito. Recarga la página.');
       return;
     }
 
     if (paymentMethod === 'cash') {
       if (!cashReceived || cashReceived.trim() === '') {
-        console.error('Por favor ingrese el monto recibido');
+        setPaymentError('Ingresa el monto recibido.');
         return;
       }
-
       const cashValue = Number.parseFloat(cashReceived);
       if (Number.isNaN(cashValue) || !Number.isFinite(cashValue)) {
-        console.error('Por favor ingrese un número válido');
+        setPaymentError('Ingresa un número válido.');
         return;
       }
-
       if (cashValue < total) {
-        console.error('El dinero recibido debe ser mayor o igual al total');
+        setPaymentError('El dinero recibido debe ser mayor o igual al total.');
         return;
       }
     }
@@ -67,12 +69,11 @@ export default function CheckoutPage() {
         : total;
 
       const tipoDePedido = tipo === 'mesa' ? 'MESA' : 'DOMICILIO';
+      const locale = params.locale ?? 'es';
 
       const response = await fetch('/api/venta/crear', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           carritoId,
           restauranteId: Number(restauranteId),
@@ -90,9 +91,6 @@ export default function CheckoutPage() {
       if (!result.success) {
         throw new Error(result.error || 'Error al procesar el pago');
       }
-
-      // Limpiar el carrito después de la venta exitosa
-      // El carrito se limpiará automáticamente cuando se navegue
 
       const successParams = new URLSearchParams();
       if (tipo) {
@@ -113,34 +111,34 @@ export default function CheckoutPage() {
       successParams.set('metodo', paymentMethod);
       successParams.set('ventaId', result.venta.id);
 
-      router.push(`/pos/success?${successParams.toString()}`);
+      router.push(`/${locale}/pos/success?${successParams.toString()}`);
     } catch (error) {
-      console.error('Error al procesar el pago:', error);
-      console.error(`Error al procesar el pago: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+      const msg = error instanceof Error ? error.message : 'Error desconocido';
+      setPaymentError(`Error al procesar el pago: ${msg}`);
     } finally {
       setIsProcessing(false);
     }
   };
 
-  // Construir URL de regreso al POS con parámetros
   const getPosUrl = () => {
-    const params = new URLSearchParams();
+    const locale = params.locale ?? 'es';
+    const urlParams = new URLSearchParams();
     if (tipo) {
-      params.set('tipo', tipo);
+      urlParams.set('tipo', tipo);
     }
     if (id) {
-      params.set('id', id);
+      urlParams.set('id', id);
     }
     if (numero) {
-      params.set('numero', numero);
+      urlParams.set('numero', numero);
     }
     if (clienteId) {
-      params.set('clienteId', clienteId);
+      urlParams.set('clienteId', clienteId);
     }
     if (restauranteId) {
-      params.set('restauranteId', restauranteId);
+      urlParams.set('restauranteId', restauranteId);
     }
-    return `/pos?${params.toString()}`;
+    return `/${locale}/pos?${urlParams.toString()}`;
   };
 
   if (cart.length === 0) {
@@ -371,13 +369,24 @@ export default function CheckoutPage() {
               </div>
             )}
 
+            {paymentError && (
+              <p className="mt-4 rounded-md bg-red-50 p-3 text-sm text-red-600 dark:bg-red-950 dark:text-red-400">
+                {paymentError}
+              </p>
+            )}
+
             <Button
               className="mt-6 w-full"
               size="lg"
               onClick={handlePayment}
-              disabled={isProcessing || (paymentMethod === 'cash' && (!cashReceived || !isValidCashAmount || cashReceivedNumber < total))}
+              disabled={
+                isProcessing
+                || isLoading
+                || !carritoId
+                || (paymentMethod === 'cash' && (!cashReceived || !isValidCashAmount || cashReceivedNumber < total))
+              }
             >
-              {isProcessing ? 'Procesando...' : 'Completar Pago'}
+              {isLoading ? 'Cargando carrito...' : isProcessing ? 'Procesando...' : 'Completar Pago'}
             </Button>
           </div>
         </div>

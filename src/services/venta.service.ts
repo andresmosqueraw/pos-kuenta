@@ -11,147 +11,126 @@ export type CrearVentaData = {
   metodoPago: string;
 };
 
-/**
- * Crea una venta en la base de datos a partir de un carrito completado
- */
 export async function crearVenta(data: CrearVentaData) {
   const supabase = await createClient();
 
-  console.warn('💰 [Service crearVenta] ═══════════════════════════════════');
-  console.warn('💰 [Service crearVenta] INICIO - Creando venta');
-  console.warn('💰 [Service crearVenta] Datos recibidos:', {
-    carritoId: data.carritoId,
-    restauranteId: data.restauranteId,
-    clienteId: data.clienteId,
-    total: data.total,
-    dineroRecibido: data.dineroRecibido,
-    cambioDado: data.cambioDado,
-    tipoDePedido: data.tipoDePedido,
-    metodoPago: data.metodoPago,
-  });
-
   try {
-    // Paso 1: Verificar que el carrito existe y obtener su información
+    // Paso 1: Obtener carrito con tipo_pedido y productos
     const { data: carrito, error: errorCarrito } = await supabase
       .from('carrito')
-      .select('*, tipo_pedido(*)')
+      .select(`
+        *,
+        tipo_pedido(*),
+        carrito_producto(
+          cantidad,
+          precio_unitario,
+          subtotal,
+          producto_restaurante:producto_restaurante_id(
+            producto_id,
+            producto:producto_id(id, nombre)
+          )
+        )
+      `)
       .eq('id', data.carritoId)
       .single();
 
     if (errorCarrito || !carrito) {
-      console.error('❌ [Service crearVenta] Error obteniendo carrito:', errorCarrito);
+      console.error('❌ [crearVenta] Error obteniendo carrito:', errorCarrito);
       throw new Error('Carrito no encontrado');
     }
 
-    console.warn('✅ [Service crearVenta] Carrito encontrado:', {
-      carritoId: carrito.id,
-      estado: carrito.estado,
-      tipoPedidoId: carrito.tipo_pedido_id,
-    });
-
     // Paso 2: Verificar si ya existe una venta para este carrito
-    const { data: ventaExistente, error: errorVentaExistente } = await supabase
+    const { data: ventaExistente } = await supabase
       .from('venta')
       .select('*')
       .eq('carrito_id', data.carritoId)
       .maybeSingle();
 
-    if (errorVentaExistente && errorVentaExistente.code !== 'PGRST116') {
-      // PGRST116 es "no rows returned", que es esperado si no existe
-      console.error('❌ [Service crearVenta] Error verificando venta existente:', errorVentaExistente);
-      throw new Error('Error al verificar venta existente');
-    }
-
-    let ventaCreada;
+    let ventaCreada: Record<string, unknown>;
 
     if (ventaExistente) {
-      // Ya existe una venta para este carrito, retornar la existente
-      console.warn('⚠️ [Service crearVenta] Ya existe una venta para este carrito:', {
-        ventaId: ventaExistente.id,
-        carritoId: ventaExistente.carrito_id,
-        total: ventaExistente.total,
-      });
       ventaCreada = ventaExistente;
     } else {
-      // Paso 3: Crear el registro de venta
-      const ventaData = {
-        carrito_id: data.carritoId,
-        restaurante_id: data.restauranteId,
-        cliente_id: data.clienteId || null,
-        total: data.total,
-        dinero_recibido: data.dineroRecibido,
-        cambio_dado: data.cambioDado,
-        tipo_de_pedido: data.tipoDePedido,
-        metodo_pago: data.metodoPago,
-        fecha: new Date().toISOString(),
-      };
-
-      console.warn('📝 [Service crearVenta] Insertando venta:', ventaData);
-
+      // Paso 3: Insertar venta
       const { data: ventaNueva, error: errorVenta } = await supabase
         .from('venta')
-        .insert(ventaData)
+        .insert({
+          carrito_id: data.carritoId,
+          restaurante_id: data.restauranteId,
+          cliente_id: data.clienteId || null,
+          total: data.total,
+          dinero_recibido: data.dineroRecibido,
+          cambio_dado: data.cambioDado,
+          tipo_de_pedido: data.tipoDePedido,
+          metodo_pago: data.metodoPago,
+          fecha: new Date().toISOString(),
+        })
         .select()
         .single();
 
       if (errorVenta || !ventaNueva) {
-        console.error('❌ [Service crearVenta] Error creando venta:', errorVenta);
+        console.error('❌ [crearVenta] Error insertando venta:', errorVenta);
         throw new Error('Error al crear la venta');
       }
 
       ventaCreada = ventaNueva;
-    }
 
-    console.warn('✅ [Service crearVenta] Venta procesada exitosamente:', {
-      ventaId: ventaCreada.id,
-      total: ventaCreada.total,
-      tipoDePedido: ventaCreada.tipo_de_pedido,
-      esVentaExistente: !!ventaExistente,
-    });
+      // Paso 4: Insertar venta_detalle con los productos del carrito
+      const carritoProductos = (carrito.carrito_producto as any[]) || [];
+      if (carritoProductos.length > 0) {
+        const detalles = carritoProductos.map((cp: any) => {
+          const prod = Array.isArray(cp.producto_restaurante)
+            ? cp.producto_restaurante[0]
+            : cp.producto_restaurante;
+          const producto = prod?.producto
+            ? (Array.isArray(prod.producto) ? prod.producto[0] : prod.producto)
+            : null;
 
-    // Paso 4: Actualizar el estado del carrito a 'completado' o 'servido' (solo si es nueva venta)
-    if (!ventaExistente) {
-      const { error: errorUpdateCarrito } = await supabase
+          return {
+            venta_id: ventaCreada.id,
+            producto_id: prod?.producto_id ?? 0,
+            nombre_producto: producto?.nombre ?? 'Producto',
+            cantidad: cp.cantidad,
+            precio_unitario: cp.precio_unitario,
+            subtotal: cp.subtotal,
+          };
+        });
+
+        const { error: errorDetalle } = await supabase
+          .from('venta_detalle')
+          .insert(detalles);
+
+        if (errorDetalle) {
+          console.error('⚠️ [crearVenta] Error insertando venta_detalle:', errorDetalle);
+          // No lanzar error — la venta principal ya se creó
+        }
+      }
+
+      // Paso 5: Actualizar estado del carrito a 'completado'
+      await supabase
         .from('carrito')
         .update({ estado: 'completado' })
         .eq('id', data.carritoId);
 
-      if (errorUpdateCarrito) {
-        console.error('⚠️ [Service crearVenta] Error actualizando estado del carrito:', errorUpdateCarrito);
-        // No lanzar error, la venta ya se creó
-      } else {
-        console.warn('✅ [Service crearVenta] Estado del carrito actualizado a "completado"');
+      // Paso 6: Si es mesa, liberarla
+      const tipoPedido = Array.isArray(carrito.tipo_pedido)
+        ? carrito.tipo_pedido[0]
+        : carrito.tipo_pedido;
+
+      if (data.tipoDePedido === 'MESA' && tipoPedido?.mesa_id) {
+        await supabase
+          .from('mesa')
+          .update({ estado: 'disponible' })
+          .eq('id', tipoPedido.mesa_id);
       }
-    } else {
-      console.warn('ℹ️ [Service crearVenta] Venta existente, omitiendo actualización de carrito');
     }
-
-    // Paso 5: Si es una mesa, actualizar su estado a 'disponible' (solo si es nueva venta)
-    if (!ventaExistente && data.tipoDePedido === 'MESA' && carrito.tipo_pedido?.mesa_id) {
-      const { error: errorUpdateMesa } = await supabase
-        .from('mesa')
-        .update({ estado: 'disponible' })
-        .eq('id', carrito.tipo_pedido.mesa_id);
-
-      if (errorUpdateMesa) {
-        console.error('⚠️ [Service crearVenta] Error actualizando estado de la mesa:', errorUpdateMesa);
-        // No lanzar error, la venta ya se creó
-      } else {
-        console.warn('✅ [Service crearVenta] Estado de la mesa actualizado a "disponible"');
-      }
-    } else if (ventaExistente && data.tipoDePedido === 'MESA') {
-      console.warn('ℹ️ [Service crearVenta] Venta existente, omitiendo actualización de mesa');
-    }
-
-    console.warn('✅ [Service crearVenta] ═══════════════════════════════════');
-    console.warn('✅ [Service crearVenta] Venta completada exitosamente');
 
     return {
       success: true,
       venta: ventaCreada,
     };
   } catch (error) {
-    console.error('❌ [Service crearVenta] Error general:', error);
+    console.error('❌ [crearVenta] Error general:', error);
     throw error;
   }
 }
