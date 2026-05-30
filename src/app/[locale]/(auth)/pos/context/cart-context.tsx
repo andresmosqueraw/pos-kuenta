@@ -9,6 +9,7 @@ export type Product = {
   price: number;
   image: string;
   category: string;
+  productoRestauranteId?: number;
 };
 
 type CartItem = {
@@ -25,7 +26,7 @@ type CartContextType = {
   itemCount: number;
   isLoading: boolean;
   carritoId: number | null;
-  updatingItems: Set<number>; // IDs de productos que se están actualizando
+  updatingItems: Set<number>;
 };
 
 type CartProviderProps = {
@@ -43,7 +44,6 @@ export function CartProvider({ children, tipo, id, restauranteId }: CartProvider
   const [isLoading, setIsLoading] = useState(true);
   const [updatingItems, setUpdatingItems] = useState<Set<number>>(new Set());
 
-  // Cargar carrito desde Supabase cuando se monta o cambian los parámetros
   const cargarCarrito = useCallback(async () => {
     if (!tipo || !id || !restauranteId) {
       setIsLoading(false);
@@ -57,7 +57,6 @@ export function CartProvider({ children, tipo, id, restauranteId }: CartProvider
       );
 
       if (!response.ok) {
-        console.error('Error al cargar carrito:', response.statusText);
         setCart([]);
         setCarritoId(null);
         return;
@@ -80,7 +79,6 @@ export function CartProvider({ children, tipo, id, restauranteId }: CartProvider
     }
   }, [tipo, id, restauranteId]);
 
-  // Cargar carrito al montar o cuando cambian los parámetros
   useEffect(() => {
     cargarCarrito();
   }, [cargarCarrito]);
@@ -91,12 +89,11 @@ export function CartProvider({ children, tipo, id, restauranteId }: CartProvider
       return;
     }
 
-    // Marcar como actualizando
     setUpdatingItems(prev => new Set(prev).add(product.id));
 
     try {
-      // Si no hay carrito, crear uno nuevo
       if (!carritoId) {
+        // Primer producto: crear carrito
         const response = await fetch('/api/carrito/crear', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -119,60 +116,64 @@ export function CartProvider({ children, tipo, id, restauranteId }: CartProvider
         });
 
         if (!response.ok) {
-          console.error('Error al crear carrito:', response.statusText);
-          console.error('Error al agregar el producto. Por favor, intenta de nuevo.');
           return;
         }
 
         const data = await response.json();
         if (data.success) {
           setCarritoId(data.carritoId);
-          // Solo actualizar la UI cuando la petición sea exitosa
-          await cargarCarrito();
+          // Actualizar estado local directamente
+          setCart([{ ...product, quantity: 1 }]);
         }
       } else {
-        // Agregar producto al carrito existente
+        // Carrito existente: agregar producto
         const response = await fetch('/api/carrito/agregar-producto', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             carritoId,
-            restauranteId: Number.parseInt(restauranteId),
+            productoRestauranteId: product.productoRestauranteId,
             productoId: product.id,
+            restauranteId: Number.parseInt(restauranteId),
             cantidad: 1,
             precioUnitario: product.price,
           }),
         });
 
         if (!response.ok) {
-          console.error('Error al agregar producto:', response.statusText);
-          console.error('Error al agregar el producto. Por favor, intenta de nuevo.');
           return;
         }
 
-        // Solo actualizar la UI cuando la petición sea exitosa
-        await cargarCarrito();
+        const data = await response.json();
+        if (data.success) {
+          // Actualizar estado local directamente (optimistic)
+          setCart((prev) => {
+            const existing = prev.find(i => i.id === product.id);
+            if (existing) {
+              return prev.map(i =>
+                i.id === product.id ? { ...i, quantity: i.quantity + 1 } : i,
+              );
+            }
+            return [...prev, { ...product, quantity: 1 }];
+          });
+        }
       }
     } catch (error) {
       console.error('Error al agregar al carrito:', error);
-      console.error('Error al agregar el producto. Por favor, intenta de nuevo.');
     } finally {
-      // Quitar el loading
       setUpdatingItems((prev) => {
-        const newSet = new Set(prev);
-        newSet.delete(product.id);
-        return newSet;
+        const next = new Set(prev);
+        next.delete(product.id);
+        return next;
       });
     }
-  }, [tipo, id, restauranteId, carritoId, cargarCarrito]);
+  }, [tipo, id, restauranteId, carritoId]);
 
   const removeFromCart = useCallback(async (productId: number) => {
     if (!carritoId || !restauranteId) {
-      console.error('Faltan parámetros para eliminar del carrito');
       return;
     }
 
-    // Marcar como actualizando
     setUpdatingItems(prev => new Set(prev).add(productId));
 
     try {
@@ -187,47 +188,39 @@ export function CartProvider({ children, tipo, id, restauranteId }: CartProvider
       });
 
       if (!response.ok) {
-        console.error('Error al eliminar producto:', response.statusText);
-        console.error('Error al eliminar el producto. Por favor, intenta de nuevo.');
         return;
       }
 
-      // Solo actualizar la UI cuando la petición sea exitosa
-      await cargarCarrito();
+      const data = await response.json();
+      if (data.success) {
+        setCart(prev => prev.filter(i => i.id !== productId));
+      }
     } catch (error) {
       console.error('Error al eliminar del carrito:', error);
-      console.error('Error al eliminar el producto. Por favor, intenta de nuevo.');
     } finally {
-      // Quitar el loading
       setUpdatingItems((prev) => {
-        const newSet = new Set(prev);
-        newSet.delete(productId);
-        return newSet;
+        const next = new Set(prev);
+        next.delete(productId);
+        return next;
       });
     }
-  }, [carritoId, restauranteId, cargarCarrito]);
+  }, [carritoId, restauranteId]);
 
   const updateQuantity = useCallback(async (productId: number, quantity: number) => {
     if (!carritoId || !restauranteId) {
-      console.error('Faltan parámetros para actualizar cantidad');
       return;
     }
 
     if (quantity <= 0) {
-      // Eliminar producto si la cantidad es 0
       await removeFromCart(productId);
       return;
     }
 
-    const item = cart.find(item => item.id === productId);
+    const item = cart.find(i => i.id === productId);
     if (!item) {
-      console.error('Producto no encontrado en el carrito');
       return;
     }
 
-    const precioUnitario = item.price;
-
-    // Marcar como actualizando
     setUpdatingItems(prev => new Set(prev).add(productId));
 
     try {
@@ -239,34 +232,33 @@ export function CartProvider({ children, tipo, id, restauranteId }: CartProvider
           restauranteId: Number.parseInt(restauranteId),
           productoId: productId,
           cantidad: quantity,
-          precioUnitario,
+          precioUnitario: item.price,
         }),
       });
 
       if (!response.ok) {
-        console.error('Error al actualizar cantidad:', response.statusText);
-        console.error('Error al actualizar la cantidad. Por favor, intenta de nuevo.');
         return;
       }
 
-      // Solo actualizar la UI cuando la petición sea exitosa
-      await cargarCarrito();
+      const data = await response.json();
+      if (data.success) {
+        setCart(prev =>
+          prev.map(i => i.id === productId ? { ...i, quantity } : i),
+        );
+      }
     } catch (error) {
       console.error('Error al actualizar cantidad:', error);
-      console.error('Error al actualizar la cantidad. Por favor, intenta de nuevo.');
     } finally {
-      // Quitar el loading
       setUpdatingItems((prev) => {
-        const newSet = new Set(prev);
-        newSet.delete(productId);
-        return newSet;
+        const next = new Set(prev);
+        next.delete(productId);
+        return next;
       });
     }
-  }, [carritoId, restauranteId, cart, removeFromCart, cargarCarrito]);
+  }, [carritoId, restauranteId, cart, removeFromCart]);
 
   const clearCart = useCallback(async () => {
     if (!carritoId || !tipo || !id) {
-      console.error('Faltan parámetros para limpiar carrito');
       return;
     }
 
@@ -284,19 +276,20 @@ export function CartProvider({ children, tipo, id, restauranteId }: CartProvider
       });
 
       if (!response.ok) {
-        console.error('Error al limpiar carrito:', response.statusText);
         return;
       }
 
-      // Recargar carrito (debería estar vacío ahora)
-      await cargarCarrito();
+      const data = await response.json();
+      if (data.success) {
+        setCart([]);
+        setCarritoId(null);
+      }
     } catch (error) {
       console.error('Error al limpiar carrito:', error);
     }
-  }, [carritoId, tipo, id, cargarCarrito]);
+  }, [carritoId, tipo, id]);
 
   const cartTotal = cart.reduce((total, item) => total + item.price * item.quantity, 0);
-
   const itemCount = cart.reduce((count, item) => count + item.quantity, 0);
 
   const contextValue = useMemo(

@@ -264,6 +264,7 @@ export async function getProductosByRestaurante(
         price: precio,
         image: asignarImagenAProducto(producto.nombre, producto.id),
         category: categoriaSlug,
+        productoRestauranteId: item.id,
       };
     });
 
