@@ -15,7 +15,7 @@ import { useRestaurant } from '@/contexts/RestaurantContext';
 
 export function DashboardHeader() {
   const { selectedRestaurant } = useRestaurant();
-  const [currentTime, setCurrentTime] = useState(() => new Date());
+  const [currentTime, setCurrentTime] = useState<Date | null>(null);
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
     if (typeof window === 'undefined') {
       return 'dark';
@@ -31,9 +31,7 @@ export function DashboardHeader() {
   });
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
@@ -127,10 +125,12 @@ export function DashboardHeader() {
         </div>
 
         <div className="ml-auto flex items-center gap-4">
-          <div className="hidden flex-col items-end font-mono text-sm sm:flex">
-            <span className="text-xs text-muted-foreground">{formatDate(currentTime)}</span>
-            <span className="text-foreground tabular-nums">{formatTime(currentTime)}</span>
-          </div>
+          {currentTime && (
+            <div className="hidden flex-col items-end font-mono text-sm sm:flex">
+              <span className="text-xs text-muted-foreground">{formatDate(currentTime)}</span>
+              <span className="text-foreground tabular-nums">{formatTime(currentTime)}</span>
+            </div>
+          )}
 
           <Button
             variant="ghost"

@@ -27,38 +27,20 @@ export default async function Page({
     ? Number.parseInt(resolvedSearchParams.restauranteId, 10)
     : null;
 
-  const [mesas, restaurantes] = await Promise.all([
+  // Lanzar todas las queries en paralelo usando el restauranteId de la URL directamente
+  const [mesas, restaurantes, domicilios, mesasConCarrito, domiciliosConCarrito] = await Promise.all([
     getMesas(),
     getRestaurantes(),
+    restauranteIdFromUrl ? getDomiciliosConRelaciones(restauranteIdFromUrl) : Promise.resolve([]),
+    restauranteIdFromUrl ? getMesasConCarritoActivo(restauranteIdFromUrl) : Promise.resolve([]),
+    restauranteIdFromUrl ? getDomiciliosConCarritoActivo(restauranteIdFromUrl) : Promise.resolve([]),
   ]);
 
   const restauranteSeleccionado = restauranteIdFromUrl
     ? restaurantes.find(r => r.id === restauranteIdFromUrl) || restaurantes[0]
     : restaurantes[0];
 
-  // Seleccionar el restaurante como predeterminado
   const restauranteDefault = restaurantes.length > 0 ? restauranteSeleccionado : undefined;
-
-  // Obtener domicilios filtrados por restaurante (si está seleccionado)
-  // Esto usa cliente_restaurante para mostrar todos los domicilios de clientes conocidos
-  const domicilios = await getDomiciliosConRelaciones(restauranteDefault?.id);
-
-  // Obtener mesas y domicilios con carritos activos (con productos) para el restaurante seleccionado
-  const [mesasConCarrito, domiciliosConCarrito] = restauranteDefault
-    ? await Promise.all([
-        getMesasConCarritoActivo(restauranteDefault.id),
-        getDomiciliosConCarritoActivo(restauranteDefault.id),
-      ])
-    : [[], []];
-
-  console.warn('📊 Dashboard cargado:', {
-    restaurante: restauranteDefault?.nombre,
-    restauranteId: restauranteDefault?.id,
-    totalMesas: mesas.length,
-    mesasConCarrito: mesasConCarrito.length,
-    mesasConCarritoIds: mesasConCarrito,
-    domiciliosConCarrito: domiciliosConCarrito.length,
-  });
 
   return (
     <RestaurantProvider defaultRestaurant={restauranteDefault}>
