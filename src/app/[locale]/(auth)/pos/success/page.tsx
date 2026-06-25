@@ -5,6 +5,7 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
+import { useThermalPrinter } from '@/hooks/useThermalPrinter';
 import { createClient } from '@/libs/supabase/client';
 import { useCart } from '../context/cart-context';
 
@@ -16,11 +17,14 @@ type Restaurante = {
   nit: number | null;
 };
 
+type PrintError = 'not-installed' | 'no-printer' | 'error' | null;
+
 export default function SuccessPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const routeParams = useParams<{ locale: string }>();
   const { cart, cartTotal, clearCart } = useCart();
+  const { print } = useThermalPrinter();
 
   const total = cartTotal;
   const ventaId = searchParams.get('ventaId');
@@ -38,7 +42,8 @@ export default function SuccessPage() {
     }).format(new Date()),
   );
   const [restaurante, setRestaurante] = useState<Restaurante | null>(null);
-  const [printError, setPrintError] = useState<string | null>(null);
+  const [printError, setPrintError] = useState<PrintError>(null);
+  const [printing, setPrinting] = useState(false);
 
   useEffect(() => {
     if (!restauranteId) {
@@ -60,37 +65,27 @@ export default function SuccessPage() {
   useEffect(() => {
     if (cart.length === 0) {
       const locale = routeParams.locale ?? 'es';
-      const dashboardUrl = restauranteId
+      router.push(restauranteId
         ? `/${locale}/dashboard?restauranteId=${restauranteId}`
-        : `/${locale}/dashboard`;
-      router.push(dashboardUrl);
+        : `/${locale}/dashboard`);
     }
   }, [cart, router, restauranteId, routeParams.locale]);
 
   const handleBackToDashboard = () => {
     const locale = routeParams.locale ?? 'es';
     clearCart();
-    const dashboardUrl = restauranteId
+    router.push(restauranteId
       ? `/${locale}/dashboard?restauranteId=${restauranteId}`
-      : `/${locale}/dashboard`;
-    router.push(dashboardUrl);
+      : `/${locale}/dashboard`);
   };
 
   const handlePrint = async () => {
     setPrintError(null);
-    const payload = JSON.stringify({ restaurante, cart, total, receiptNumber, date, mesaNumero });
-    try {
-      const res = await fetch('http://localhost:6543/print', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: payload,
-      });
-      if (!res.ok) {
-        const { error } = await res.json();
-        setPrintError(`Error al imprimir: ${error}`);
-      }
-    } catch {
-      setPrintError('no-server');
+    setPrinting(true);
+    const result = await print({ restaurante, cart, total, receiptNumber, date, mesaNumero });
+    setPrinting(false);
+    if (!result.ok) {
+      setPrintError(result.reason);
     }
   };
 
@@ -216,30 +211,54 @@ export default function SuccessPage() {
       </div>
 
       <div className="print-hidden mt-6 flex flex-col gap-3">
-        <Button onClick={handlePrint} variant="outline" className="mx-auto w-[80mm]">
+        <Button
+          onClick={handlePrint}
+          disabled={printing}
+          variant="outline"
+          className="mx-auto w-[80mm]"
+        >
           <Printer className="mr-2 h-4 w-4" />
-          Imprimir Recibo
+          {printing ? 'Imprimiendo...' : 'Imprimir Recibo'}
         </Button>
+
         {printError && (
-          <div className="mx-auto w-[80mm] space-y-1 text-center text-xs text-red-500">
-            {printError === 'no-server'
+          <div className="mx-auto w-[80mm] space-y-2 rounded-md border border-red-200 bg-red-50 p-3 text-center text-xs">
+            {printError === 'not-installed'
               ? (
                   <>
-                    <p className="font-medium">Impresora no configurada en este computador.</p>
-                    <p className="mt-1 text-gray-500">
-                      Pide a tu técnico que ejecute este comando una sola vez:
+                    <p className="font-medium text-red-600">
+                      QZ Tray no está instalado en este computador.
                     </p>
-                    <code className="mt-1 block rounded bg-gray-100 px-2 py-1 break-all text-gray-700">
-                      {`curl -sSL ${typeof window !== 'undefined' ? window.location.origin : ''}/downloads/instalar-impresora.sh | bash`}
-                    </code>
-                    <p className="mt-1 text-gray-400">
-                      Después la impresora funcionará sola siempre.
+                    <p className="text-gray-600">
+                      Descárgalo e instálalo como cualquier programa (doble clic):
+                    </p>
+                    <a
+                      href="https://qz.io/download/"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-block font-medium text-blue-600 underline"
+                    >
+                      Descargar QZ Tray
+                    </a>
+                    <p className="text-gray-400">
+                      Disponible para Windows, Mac y Linux. Solo se instala una vez.
                     </p>
                   </>
                 )
-              : <p>{printError}</p>}
+              : printError === 'no-printer'
+                ? (
+                    <p className="text-red-600">
+                      No se encontró ninguna impresora. Verifica que esté conectada y encendida.
+                    </p>
+                  )
+                : (
+                    <p className="text-red-600">
+                      Error al imprimir. Verifica que la impresora esté lista.
+                    </p>
+                  )}
           </div>
         )}
+
         <Button onClick={handleBackToDashboard} className="mx-auto w-[80mm]">
           Volver a las mesas
         </Button>
