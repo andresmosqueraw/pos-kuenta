@@ -225,18 +225,15 @@ export default function SuccessPage() {
             {printError === 'no-server'
               ? (
                   <>
-                    <p>Servidor de impresión no encontrado.</p>
-                    <a
-                      href="/downloads/print-server.js"
-                      download="print-server.js"
-                      className="text-blue-500 underline"
-                    >
-                      Descargar servidor de impresión
-                    </a>
-                    <p className="text-gray-400">
-                      Descarga el archivo y ejecuta:
-                      {' '}
-                      <code>node print-server.js</code>
+                    <p className="font-medium">Impresora no configurada en este computador.</p>
+                    <p className="mt-1 text-gray-500">
+                      Pide a tu técnico que ejecute este comando una sola vez:
+                    </p>
+                    <code className="mt-1 block rounded bg-gray-100 px-2 py-1 break-all text-gray-700">
+                      {`curl -sSL ${typeof window !== 'undefined' ? window.location.origin : ''}/downloads/instalar-impresora.sh | bash`}
+                    </code>
+                    <p className="mt-1 text-gray-400">
+                      Después la impresora funcionará sola siempre.
                     </p>
                   </>
                 )
