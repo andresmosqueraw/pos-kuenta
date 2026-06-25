@@ -5,7 +5,7 @@
     "node": ">=20"
   },
   "scripts": {
-    "print-server": "node scripts/print-server.js",
+    "print-server": "node public/downloads/print-server.js",
     "dev:spotlight": "npx @spotlightjs/spotlight",
     "dev:next": "next dev",
     "dev": "npm-run-all db-remote:neon db:migrate --parallel dev:*",

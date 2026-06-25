@@ -90,7 +90,7 @@ export default function SuccessPage() {
         setPrintError(`Error al imprimir: ${error}`);
       }
     } catch {
-      setPrintError('Impresora no disponible. ¿Está corriendo el servidor de impresión?');
+      setPrintError('no-server');
     }
   };
 
@@ -221,7 +221,27 @@ export default function SuccessPage() {
           Imprimir Recibo
         </Button>
         {printError && (
-          <p className="mx-auto w-[80mm] text-center text-xs text-red-500">{printError}</p>
+          <div className="mx-auto w-[80mm] space-y-1 text-center text-xs text-red-500">
+            {printError === 'no-server'
+              ? (
+                  <>
+                    <p>Servidor de impresión no encontrado.</p>
+                    <a
+                      href="/downloads/print-server.js"
+                      download="print-server.js"
+                      className="text-blue-500 underline"
+                    >
+                      Descargar servidor de impresión
+                    </a>
+                    <p className="text-gray-400">
+                      Descarga el archivo y ejecuta:
+                      {' '}
+                      <code>node print-server.js</code>
+                    </p>
+                  </>
+                )
+              : <p>{printError}</p>}
+          </div>
         )}
         <Button onClick={handleBackToDashboard} className="mx-auto w-[80mm]">
           Volver a las mesas

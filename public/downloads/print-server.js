@@ -150,6 +150,6 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(PORT, '127.0.0.1', () => {
-  console.log(`Servidor de impresión escuchando en http://localhost:${PORT}/print`);
-  console.log(`Dispositivo: ${DEVICE}`);
+  process.stderr.write(`Servidor de impresión escuchando en http://localhost:${PORT}/print\n`);
+  process.stderr.write(`Dispositivo: ${DEVICE}\n`);
 });
