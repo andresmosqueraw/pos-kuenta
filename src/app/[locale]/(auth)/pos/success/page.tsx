@@ -78,25 +78,19 @@ export default function SuccessPage() {
 
   const handlePrint = async () => {
     setPrintError(null);
+    const payload = JSON.stringify({ restaurante, cart, total, receiptNumber, date, mesaNumero });
     try {
-      const res = await fetch('/api/print-receipt', {
+      const res = await fetch('http://localhost:6543/print', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          restaurante,
-          cart,
-          total,
-          receiptNumber,
-          date,
-          mesaNumero,
-        }),
+        body: payload,
       });
       if (!res.ok) {
         const { error } = await res.json();
         setPrintError(`Error al imprimir: ${error}`);
       }
     } catch {
-      setPrintError('No se pudo conectar con la impresora.');
+      setPrintError('Impresora no disponible. ¿Está corriendo el servidor de impresión?');
     }
   };
 
