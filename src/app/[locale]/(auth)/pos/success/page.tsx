@@ -38,6 +38,7 @@ export default function SuccessPage() {
     }).format(new Date()),
   );
   const [restaurante, setRestaurante] = useState<Restaurante | null>(null);
+  const [printError, setPrintError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!restauranteId) {
@@ -75,23 +76,28 @@ export default function SuccessPage() {
     router.push(dashboardUrl);
   };
 
-  const handlePrint = () => {
-    const style = document.createElement('style');
-    style.id = '__receipt-print-style';
-    style.textContent = `
-      @media print {
-        html, body {
-          background: white !important;
-          color: black !important;
-          --background: white !important;
-          --foreground: black !important;
-        }
-        .print-hidden { display: none !important; }
+  const handlePrint = async () => {
+    setPrintError(null);
+    try {
+      const res = await fetch('/api/print-receipt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          restaurante,
+          cart,
+          total,
+          receiptNumber,
+          date,
+          mesaNumero,
+        }),
+      });
+      if (!res.ok) {
+        const { error } = await res.json();
+        setPrintError(`Error al imprimir: ${error}`);
       }
-    `;
-    document.head.appendChild(style);
-    window.print();
-    window.addEventListener('afterprint', () => style.remove(), { once: true });
+    } catch {
+      setPrintError('No se pudo conectar con la impresora.');
+    }
   };
 
   if (cart.length === 0) {
@@ -220,6 +226,9 @@ export default function SuccessPage() {
           <Printer className="mr-2 h-4 w-4" />
           Imprimir Recibo
         </Button>
+        {printError && (
+          <p className="mx-auto w-[80mm] text-center text-xs text-red-500">{printError}</p>
+        )}
         <Button onClick={handleBackToDashboard} className="mx-auto w-[80mm]">
           Volver a las mesas
         </Button>
