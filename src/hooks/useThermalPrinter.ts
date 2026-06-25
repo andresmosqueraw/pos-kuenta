@@ -46,15 +46,13 @@ export function useThermalPrinter() {
       }
 
       const printers: string[] = await qz.printers.find();
-      if (!printers.length) {
-        return { ok: false, reason: 'no-printer', message: 'No se encontró ninguna impresora.' };
-      }
 
-      const thermalPrinter = printers.find(p =>
-        /thermal|receipt|pos|rpt|star|epson|bixolon|citizen/i.test(p),
-      ) ?? printers[0];
+      const thermalPrinter
+        = printers.find(p => /thermal|receipt|pos|rpt|star|epson|bixolon|citizen/i.test(p))
+          ?? printers[0]
+          ?? '\\\\.\\USB001'; // fallback: Windows USB raw / Linux ignora esto
 
-      const config = qz.configs.create(thermalPrinter);
+      const config = qz.configs.create(thermalPrinter, { raw: true });
       const receipt = buildReceipt(data);
 
       await qz.print(config, [{ type: 'raw', format: 'base64', data: toBase64(receipt) }]);
